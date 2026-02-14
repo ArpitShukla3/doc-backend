@@ -3,8 +3,10 @@ import { exec } from "child_process";
 import { getFileName, writeFileCustom } from "../controller/codeRunner/helpers";
 import { config } from "dotenv";
 import { pub } from "../config/redis";
+import { promisify } from "util";
+const execAsync = promisify(exec);
 config();
-async function work(language: string, code: string, input?: string): Promise<void> {
+async function work(language: string, code: string, input?: string): Promise<{ output?: string; error?: string }> {
     const [fileNameStatus, fileName, command] = getFileName(language, !!input) as [boolean, string, string];
     if (!fileNameStatus) {
         return Promise.reject({
@@ -19,29 +21,28 @@ async function work(language: string, code: string, input?: string): Promise<voi
             error: "Failed to write code or input to file"
         });
     }
+    try {
+        const { stdout, stderr } = await execAsync(command);
 
-    exec(command, (error, stdout, stderr) => {
-
-        if (error) {
-            console.error(`Execution error: ${error}`);
-            return Promise.reject({
-                error: stderr || "Error executing code"
-            });
+        if (stderr) {
+        return { error: stderr };
         }
-        return Promise.resolve({
-            output: stdout
-        });
 
-    });
+        return { output: stdout };
+
+    } catch (err: any) {
+        return { error: err.stderr || err.message };
+    }
 }
 const worker = new Worker("codeQueue", async job => {
-    const { code, language, input } = job.data;
+    const { code, language, input, socketId,id } = job.data;
     const response = await work(language, code, input);
-    pub.publish("codeExecutionResponse", JSON.stringify({
+    await pub.publish("codeExecutionResponse", JSON.stringify({
         jobId: job.id,
-        response: response
+        response: response,
+        socketId: socketId,
+        id:id
     }));
-    console.log("Code execution completed", response);
 }, {
     connection: {
         host: process.env.REDIS_HOST,

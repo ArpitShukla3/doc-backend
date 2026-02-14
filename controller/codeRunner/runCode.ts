@@ -10,11 +10,13 @@ async function runCode(
   const TextBlock:TextBlockType = req.body as TextBlockType;
   const code = TextBlock.text;
   const language = TextBlock.codeLanguage;
+  const socketId = req.headers["socket-id"] as string;
   const input = TextBlock.input;
-  if (!code || !language) {
+  const id = TextBlock.id;
+  if (!code || !language || !socketId || !id) {
     res.status(400).json({
       data: TextBlock,
-      error: "Code and language are required"
+      error: "Code, language, socket-id, and id are required"
     });
     return;
   }
@@ -22,7 +24,9 @@ async function runCode(
     await codeQueue.add("executeCode", {
       code,
       language,
-      input
+      input,
+      socketId,
+      id
     });
     res.status(200).json({
       message: "Code execution job added to queue"
