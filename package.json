@@ -1,0 +1,28 @@
+{
+  "dependencies": {
+    "bullmq": "^5.69.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "ioredis": "^5.9.3",
+    "socket.io": "^4.8.3"
+  },
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/ioredis": "^4.28.10",
+    "ts-node-dev": "^2.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --respawn --transpile-only app.ts",
+    "worker": "ts-node-dev --respawn --transpile-only queue/worker.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
